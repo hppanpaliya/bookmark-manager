@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ExternalLink, Lock, Edit, Trash2, User, Key } from 'lucide-react';
+import { ExternalLink, Lock, Edit, Trash2, User, Key, Eye, EyeOff } from 'lucide-react';
 import { Bookmark } from '@/types';
 import { formatDate, getDomainFromUrl } from '@/lib/utils';
 import { Button } from './ui/Button';
@@ -14,6 +15,8 @@ interface BookmarkCardProps {
 }
 
 export function BookmarkCard({ bookmark, isAdmin = false, onEdit, onDelete }: BookmarkCardProps) {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -67,7 +70,16 @@ export function BookmarkCard({ bookmark, isAdmin = false, onEdit, onDelete }: Bo
               {bookmark.password && (
                 <div className="flex items-center gap-1 bg-[var(--muted)] px-2 py-1 rounded">
                   <Key size={12} />
-                  <span className="font-mono">••••••••</span>
+                  <span className="font-mono">
+                    {showPassword ? bookmark.password : '••••••••'}
+                  </span>
+                  <button
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="ml-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff size={12} /> : <Eye size={12} />}
+                  </button>
                 </div>
               )}
             </div>

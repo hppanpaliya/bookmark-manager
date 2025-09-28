@@ -5,22 +5,33 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Settings, Sparkles, Globe } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { Bookmark, Category, SearchFilters, BookmarkListResponse } from '@/types';
+import { Bookmark, Category, SearchFilters, BookmarkListResponse, BookmarkCreateInput, BookmarkUpdateInput } from '@/types';
 import { BookmarkCard } from '@/components/BookmarkCard';
+import { BookmarkForm } from '@/components/BookmarkForm';
 import { SearchBar } from '@/components/SearchBar';
 import { FilterPanel } from '@/components/FilterPanel';
 import { Button } from '@/components/ui/Button';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { useSSE } from '@/lib/useSSE';
 
+interface ExtendedUser {
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role?: string;
+}
+
 export default function HomePage() {
   const { data: session } = useSession();
-  const isAdmin = session?.user?.role === 'admin';
+  const isAdmin = (session?.user as ExtendedUser)?.role === 'admin';
 
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingBookmark, setEditingBookmark] = useState<Bookmark | undefined>();
+  const [formLoading, setFormLoading] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({
     sort_by: 'created_at',
     sort_order: 'desc',
@@ -80,6 +91,52 @@ export default function HomePage() {
 
   const handleSortChange = (sortBy: 'created_at' | 'title' | 'updated_at', sortOrder: 'asc' | 'desc') => {
     setFilters(prev => ({ ...prev, sort_by: sortBy, sort_order: sortOrder }));
+  };
+
+  const handleFormSubmit = async (data: BookmarkCreateInput | BookmarkUpdateInput) => {
+    setFormLoading(true);
+    try {
+      const url = editingBookmark ? `/api/bookmarks/${editingBookmark.id}` : '/api/bookmarks';
+      const method = editingBookmark ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        setShowForm(false);
+        setEditingBookmark(undefined);
+        // SSE will handle updates
+      }
+    } catch (error) {
+      console.error('Error saving bookmark:', error);
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleEdit = (bookmark: Bookmark) => {
+    setEditingBookmark(bookmark);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this bookmark?')) return;
+
+    try {
+      const response = await fetch(`/api/bookmarks/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        console.error('Failed to delete bookmark');
+      }
+      // SSE will handle updates
+    } catch (error) {
+      console.error('Error deleting bookmark:', error);
+    }
   };
 
   // SSE for real-time updates
@@ -274,6 +331,8 @@ export default function HomePage() {
                       <BookmarkCard
                         bookmark={bookmark}
                         isAdmin={isAdmin}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
                       />
                     </motion.div>
                   ))}
@@ -318,6 +377,22 @@ export default function HomePage() {
           </motion.div>
         </Link>
       )}
+
+      {/* Bookmark Form Modal */}
+      <AnimatePresence>
+        {showForm && (
+          <BookmarkForm
+            bookmark={editingBookmark}
+            categories={categories}
+            onSubmit={handleFormSubmit}
+            onCancel={() => {
+              setShowForm(false);
+              setEditingBookmark(undefined);
+            }}
+            isLoading={formLoading}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
