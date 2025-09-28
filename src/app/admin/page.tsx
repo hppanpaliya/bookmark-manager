@@ -1,30 +1,43 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Settings } from 'lucide-react';
+import { Plus, LogOut } from 'lucide-react';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
 import { Bookmark, Category, SearchFilters, BookmarkListResponse } from '@/types';
 import { BookmarkCard } from '@/components/BookmarkCard';
 import { SearchBar } from '@/components/SearchBar';
 import { FilterPanel } from '@/components/FilterPanel';
+import { BookmarkForm } from '@/components/BookmarkForm';
 import { Button } from '@/components/ui/Button';
 import { useSSE } from '@/lib/useSSE';
 
-export default function HomePage() {
-  const { data: session } = useSession();
-  const isAdmin = session?.user?.role === 'admin';
+export default function AdminPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingBookmark, setEditingBookmark] = useState<Bookmark | undefined>();
+  const [formLoading, setFormLoading] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({
     sort_by: 'created_at',
     sort_order: 'desc',
   });
-  const [showPrivate, setShowPrivate] = useState(false);
+  const [showPrivate, setShowPrivate] = useState(true);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (status === 'loading') return; // Still loading
+    if (!session || session.user.role !== 'admin') {
+      router.push('/admin/login');
+    }
+  }, [session, status, router]);
 
   const fetchBookmarks = useCallback(async () => {
     try {
@@ -34,7 +47,7 @@ export default function HomePage() {
       if (filters.category_id) params.append('category_id', filters.category_id.toString());
       if (filters.sort_by) params.append('sort_by', filters.sort_by);
       if (filters.sort_order) params.append('sort_order', filters.sort_order);
-      if (isAdmin && showPrivate !== undefined) params.append('is_private', showPrivate.toString());
+      if (showPrivate !== undefined) params.append('is_private', showPrivate.toString());
 
       const response = await fetch(`/api/bookmarks?${params}`);
       const data: BookmarkListResponse = await response.json();
@@ -42,7 +55,7 @@ export default function HomePage() {
     } catch (error) {
       console.error('Error fetching bookmarks:', error);
     }
-  }, [filters.query, filters.category_id, filters.sort_by, filters.sort_order, isAdmin, showPrivate]);
+  }, [filters.query, filters.category_id, filters.sort_by, filters.sort_order, showPrivate]);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -55,17 +68,19 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    const loadData = async () => {
-      if (initialLoad) {
-        setLoading(true);
-      }
-      await Promise.all([fetchBookmarks(), fetchCategories()]);
-      setLoading(false);
-      setInitialLoad(false);
-    };
+    if (session?.user?.role === 'admin') {
+      const loadData = async () => {
+        if (initialLoad) {
+          setLoading(true);
+        }
+        await Promise.all([fetchBookmarks(), fetchCategories()]);
+        setLoading(false);
+        setInitialLoad(false);
+      };
 
-    loadData();
-  }, [fetchBookmarks, fetchCategories, initialLoad]);
+      loadData();
+    }
+  }, [session?.user?.role, fetchBookmarks, fetchCategories, initialLoad]);
 
   const handleSearchChange = (query: string) => {
     setFilters(prev => ({ ...prev, query }));
@@ -79,15 +94,65 @@ export default function HomePage() {
     setFilters(prev => ({ ...prev, sort_by: sortBy, sort_order: sortOrder }));
   };
 
-  // SSE for real-time updates
+  const handleFormSubmit = async (data: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    setFormLoading(true);
+    try {
+      const url = editingBookmark ? `/api/bookmarks/${editingBookmark.id}` : '/api/bookmarks';
+      const method = editingBookmark ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        setShowForm(false);
+        setEditingBookmark(undefined);
+        // Don't manually fetch - SSE will handle updates
+      }
+    } catch (error) {
+      console.error('Error saving bookmark:', error);
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleEdit = (bookmark: Bookmark) => {
+    setEditingBookmark(bookmark);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this bookmark?')) return;
+
+    try {
+      const response = await fetch(`/api/bookmarks/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        console.error('Failed to delete bookmark');
+      }
+      // Don't manually fetch - SSE will handle updates
+    } catch (error) {
+      console.error('Error deleting bookmark:', error);
+    }
+  };
+
+  const handleLogout = () => {
+    signOut({ callbackUrl: '/' });
+  };
+
+  // SSE for real-time updates in admin
   useSSE({
     onBookmarkCreated: (bookmark) => {
-      // Only add if it matches current filters (simplified check)
+      // Check if it matches current filters
       if (!filters.query || bookmark.title.toLowerCase().includes(filters.query.toLowerCase()) ||
           bookmark.description?.toLowerCase().includes(filters.query.toLowerCase()) ||
           bookmark.url.toLowerCase().includes(filters.query.toLowerCase())) {
         if (!filters.category_id || bookmark.category_id === filters.category_id) {
-          if (isAdmin || !bookmark.is_private) {
+          if (showPrivate === undefined || bookmark.is_private === showPrivate) {
             setBookmarks(prev => [bookmark, ...prev]);
           }
         }
@@ -110,6 +175,18 @@ export default function HomePage() {
     }
   });
 
+  if (status === 'loading' || (!session && status !== 'unauthenticated')) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!session || session.user.role !== 'admin') {
+    return null; // Will redirect via useEffect
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -117,31 +194,44 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Bookmarks</h1>
-              <p className="text-gray-600">Discover and organize your favorite links</p>
+              <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
+              <p className="text-gray-600">Manage your bookmarks and categories</p>
             </div>
 
             <div className="flex gap-3">
-              {isAdmin ? (
-                <Link href="/admin">
-                  <Button variant="outline">
-                    <Settings size={20} className="mr-2" />
-                    Admin
-                  </Button>
-                </Link>
-              ) : (
-                <Link href="/admin/login">
-                  <Button>
-                    Admin Login
-                  </Button>
-                </Link>
-              )}
+              <Link href="/">
+                <Button variant="outline">
+                  View Public Site
+                </Button>
+              </Link>
+              <Button variant="outline" onClick={handleLogout}>
+                <LogOut size={20} className="mr-2" />
+                Logout
+              </Button>
             </div>
           </div>
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Action Buttons */}
+        <div className="mb-8 flex gap-3">
+          <Button
+            onClick={() => {
+              setEditingBookmark(undefined);
+              setShowForm(true);
+            }}
+          >
+            <Plus size={20} className="mr-2" />
+            Add Bookmark
+          </Button>
+          <Link href="/admin/categories">
+            <Button variant="outline">
+              Manage Categories
+            </Button>
+          </Link>
+        </div>
+
         {/* Search and Filters */}
         <div className="mb-8 space-y-4">
           <div className="max-w-md">
@@ -160,8 +250,8 @@ export default function HomePage() {
             showPrivate={showPrivate}
             onCategoryChange={handleCategoryChange}
             onSortChange={handleSortChange}
-            onPrivateToggle={isAdmin ? setShowPrivate : undefined}
-            isAdmin={isAdmin}
+            onPrivateToggle={setShowPrivate}
+            isAdmin={true}
           />
         </div>
 
@@ -190,7 +280,7 @@ export default function HomePage() {
                   ) : (
                     <div>
                       <p className="text-lg mb-2">No bookmarks yet</p>
-                      {isAdmin && <p>Start by adding your first bookmark!</p>}
+                      <p>Create your first bookmark to get started!</p>
                     </div>
                   )}
                 </div>
@@ -206,7 +296,9 @@ export default function HomePage() {
                     <BookmarkCard
                       key={bookmark.id}
                       bookmark={bookmark}
-                      isAdmin={isAdmin}
+                      isAdmin={true}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
                     />
                   ))}
                 </AnimatePresence>
@@ -220,27 +312,28 @@ export default function HomePage() {
                 animate={{ opacity: 1 }}
                 className="mt-8 text-center text-sm text-gray-500"
               >
-                Showing {bookmarks.length} bookmark{bookmarks.length !== 1 ? 's' : ''}
+                Managing {bookmarks.length} bookmark{bookmarks.length !== 1 ? 's' : ''}
               </motion.div>
             )}
           </>
         )}
       </div>
 
-      {/* Floating Action Button (Admin Only) */}
-      {isAdmin && (
-        <Link href="/admin/bookmarks/new">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors cursor-pointer"
-          >
-            <Plus size={24} />
-          </motion.div>
-        </Link>
-      )}
+      {/* Bookmark Form Modal */}
+      <AnimatePresence>
+        {showForm && (
+          <BookmarkForm
+            bookmark={editingBookmark}
+            categories={categories}
+            onSubmit={handleFormSubmit}
+            onCancel={() => {
+              setShowForm(false);
+              setEditingBookmark(undefined);
+            }}
+            isLoading={formLoading}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
