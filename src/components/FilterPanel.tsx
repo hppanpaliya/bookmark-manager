@@ -2,20 +2,22 @@
 
 import { Fragment } from 'react';
 import { Menu, Transition } from '@headlessui/react';
-import { ChevronDownIcon, Filter } from 'lucide-react';
+import { ChevronDownIcon, Filter, Eye } from 'lucide-react';
 import { Category } from '@/types';
 import { Button } from './ui/Button';
 import { cn } from '@/lib/utils';
+
+export type VisibilityFilter = 'all' | 'public' | 'private';
 
 interface FilterPanelProps {
   categories: Category[];
   selectedCategory?: number;
   sortBy: 'created_at' | 'title' | 'updated_at';
   sortOrder: 'asc' | 'desc';
-  showPrivate?: boolean;
+  visibilityFilter?: VisibilityFilter;
   onCategoryChange: (categoryId?: number) => void;
   onSortChange: (sortBy: 'created_at' | 'title' | 'updated_at', sortOrder: 'asc' | 'desc') => void;
-  onPrivateToggle?: (showPrivate: boolean) => void;
+  onVisibilityChange?: (filter: VisibilityFilter) => void;
   isAdmin?: boolean;
 }
 
@@ -24,13 +26,22 @@ export function FilterPanel({
   selectedCategory,
   sortBy,
   sortOrder,
-  showPrivate,
+  visibilityFilter = 'all',
   onCategoryChange,
   onSortChange,
-  onPrivateToggle,
+  onVisibilityChange,
   isAdmin = false,
 }: FilterPanelProps) {
   const selectedCategoryName = categories.find(c => c.id === selectedCategory)?.name || 'All Categories';
+
+  const visibilityOptions = [
+    { key: 'all', label: 'All Bookmarks', icon: '🌐' },
+    { key: 'public', label: 'Public Only', icon: '👁️' },
+    { key: 'private', label: 'Private Only', icon: '🔒' },
+  ] as const;
+
+  const currentVisibilityLabel = visibilityOptions.find(opt => opt.key === visibilityFilter)?.label || 'All Bookmarks';
+  const currentVisibilityIcon = visibilityOptions.find(opt => opt.key === visibilityFilter)?.icon || '🌐';
 
   const sortOptions = [
     { key: 'created_at', label: 'Date Created' },
@@ -41,7 +52,7 @@ export function FilterPanel({
   const currentSortLabel = sortOptions.find(opt => opt.key === sortBy)?.label || 'Date Created';
 
   return (
-    <div className="flex flex-wrap gap-3 items-center">
+    <div className="flex flex-wrap gap-3 items-start md:items-center">
       {/* Category Filter */}
       <Menu as="div" className="relative inline-block text-left">
         <div>
@@ -61,15 +72,15 @@ export function FilterPanel({
           leaveFrom="transform opacity-100 scale-100"
           leaveTo="transform opacity-0 scale-95"
         >
-          <Menu.Items className="absolute left-0 z-10 mt-2 w-56 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+          <Menu.Items className="absolute left-0 z-10 mt-2 w-56 origin-top-left rounded-md bg-[var(--card)] shadow-lg ring-1 ring-[var(--card-border)] focus:outline-none border border-[var(--card-border)]">
             <div className="py-1">
               <Menu.Item>
                 {({ active }) => (
                   <button
                     onClick={() => onCategoryChange(undefined)}
                     className={cn(
-                      active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                      'block w-full px-4 py-2 text-sm text-left'
+                      active ? 'bg-[var(--accent)] text-[var(--accent-foreground)]' : 'text-[var(--foreground)]',
+                      'block w-full px-4 py-2 text-sm text-left transition-colors'
                     )}
                   >
                     All Categories
@@ -120,7 +131,7 @@ export function FilterPanel({
           leaveFrom="transform opacity-100 scale-100"
           leaveTo="transform opacity-0 scale-95"
         >
-          <Menu.Items className="absolute left-0 z-10 mt-2 w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+          <Menu.Items className="absolute left-0 z-10 mt-2 w-48 origin-top-left rounded-md bg-[var(--card)] shadow-lg ring-1 ring-[var(--card-border)] focus:outline-none border border-[var(--card-border)]">
             <div className="py-1">
               {sortOptions.map((option) => (
                 <Fragment key={option.key}>
@@ -129,8 +140,8 @@ export function FilterPanel({
                       <button
                         onClick={() => onSortChange(option.key, 'desc')}
                         className={cn(
-                          active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                          'block w-full px-4 py-2 text-sm text-left'
+                          active ? 'bg-[var(--accent)] text-[var(--accent-foreground)]' : 'text-[var(--foreground)]',
+                          'block w-full px-4 py-2 text-sm text-left transition-colors'
                         )}
                       >
                         {option.label} (Newest First)
@@ -142,8 +153,8 @@ export function FilterPanel({
                       <button
                         onClick={() => onSortChange(option.key, 'asc')}
                         className={cn(
-                          active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                          'block w-full px-4 py-2 text-sm text-left'
+                          active ? 'bg-[var(--accent)] text-[var(--accent-foreground)]' : 'text-[var(--foreground)]',
+                          'block w-full px-4 py-2 text-sm text-left transition-colors'
                         )}
                       >
                         {option.label} (Oldest First)
@@ -157,15 +168,53 @@ export function FilterPanel({
         </Transition>
       </Menu>
 
-      {/* Private Toggle (Admin Only) */}
-      {isAdmin && onPrivateToggle && (
-        <Button
-          variant={showPrivate ? 'default' : 'outline'}
-          onClick={() => onPrivateToggle(!showPrivate)}
-          className="text-sm"
-        >
-          {showPrivate ? 'Showing Private' : 'Show Private'}
-        </Button>
+      {/* Visibility Filter Dropdown */}
+      {onVisibilityChange && (
+        <Menu as="div" className="relative inline-block text-left">
+          <div>
+            <Menu.Button as={Button} variant="outline" className="inline-flex w-full justify-center gap-x-1.5">
+              <Eye className="h-4 w-4" />
+              {currentVisibilityIcon} {currentVisibilityLabel}
+              <ChevronDownIcon className="-mr-1 h-5 w-5 text-gray-400" aria-hidden="true" />
+            </Menu.Button>
+          </div>
+
+          <Transition
+            as={Fragment}
+            enter="transition ease-out duration-100"
+            enterFrom="transform opacity-0 scale-95"
+            enterTo="transform opacity-100 scale-100"
+            leave="transition ease-in duration-75"
+            leaveFrom="transform opacity-100 scale-100"
+            leaveTo="transform opacity-0 scale-95"
+          >
+            <Menu.Items className="absolute left-0 z-10 mt-2 w-48 origin-top-left rounded-md bg-[var(--card)] shadow-lg ring-1 ring-[var(--card-border)] focus:outline-none border border-[var(--card-border)]">
+              <div className="py-1">
+                {visibilityOptions.map((option) => (
+                  <Menu.Item key={option.key}>
+                    {({ active }) => (
+                      <button
+                        onClick={() => onVisibilityChange(option.key)}
+                        className={cn(
+                          active ? 'bg-[var(--accent)] text-[var(--accent-foreground)]' : 'text-[var(--foreground)]',
+                          'block w-full px-4 py-2 text-sm text-left transition-colors'
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>{option.icon}</span>
+                          <span>{option.label}</span>
+                          {visibilityFilter === option.key && (
+                            <span className="ml-auto text-xs">✓</span>
+                          )}
+                        </div>
+                      </button>
+                    )}
+                  </Menu.Item>
+                ))}
+              </div>
+            </Menu.Items>
+          </Transition>
+        </Menu>
       )}
     </div>
   );

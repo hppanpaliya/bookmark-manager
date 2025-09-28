@@ -7,11 +7,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { Bookmark, Category, SearchFilters, BookmarkListResponse } from '@/types';
+
+interface ExtendedUser {
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role?: string;
+}
 import { BookmarkCard } from '@/components/BookmarkCard';
 import { SearchBar } from '@/components/SearchBar';
-import { FilterPanel } from '@/components/FilterPanel';
+import { FilterPanel, VisibilityFilter } from '@/components/FilterPanel';
 import { BookmarkForm } from '@/components/BookmarkForm';
-import { Button } from '@/components/ui/Button';
+import { Button } from "@/components/ui/Button";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { useSSE } from '@/lib/useSSE';
 
 export default function AdminPage() {
@@ -29,12 +37,12 @@ export default function AdminPage() {
     sort_by: 'created_at',
     sort_order: 'desc',
   });
-  const [showPrivate, setShowPrivate] = useState(true);
+  const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('all');
 
   // Redirect if not authenticated
   useEffect(() => {
     if (status === 'loading') return; // Still loading
-    if (!session || session.user.role !== 'admin') {
+    if (!session || (session.user as ExtendedUser)?.role !== 'admin') {
       router.push('/admin/login');
     }
   }, [session, status, router]);
@@ -47,7 +55,14 @@ export default function AdminPage() {
       if (filters.category_id) params.append('category_id', filters.category_id.toString());
       if (filters.sort_by) params.append('sort_by', filters.sort_by);
       if (filters.sort_order) params.append('sort_order', filters.sort_order);
-      if (showPrivate !== undefined) params.append('is_private', showPrivate.toString());
+
+      // Handle visibility filter
+      if (visibilityFilter === 'private') {
+        params.append('is_private', 'true');
+      } else if (visibilityFilter === 'public') {
+        params.append('is_private', 'false');
+      }
+      // For 'all', we don't add any is_private parameter
 
       const response = await fetch(`/api/bookmarks?${params}`);
       const data: BookmarkListResponse = await response.json();
@@ -55,7 +70,7 @@ export default function AdminPage() {
     } catch (error) {
       console.error('Error fetching bookmarks:', error);
     }
-  }, [filters.query, filters.category_id, filters.sort_by, filters.sort_order, showPrivate]);
+  }, [filters.query, filters.category_id, filters.sort_by, filters.sort_order, visibilityFilter]);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -68,7 +83,7 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    if (session?.user?.role === 'admin') {
+    if ((session?.user as ExtendedUser)?.role === 'admin') {
       const loadData = async () => {
         if (initialLoad) {
           setLoading(true);
@@ -80,7 +95,7 @@ export default function AdminPage() {
 
       loadData();
     }
-  }, [session?.user?.role, fetchBookmarks, fetchCategories, initialLoad]);
+  }, [session?.user, fetchBookmarks, fetchCategories, initialLoad]);
 
   const handleSearchChange = (query: string) => {
     setFilters(prev => ({ ...prev, query }));
@@ -92,6 +107,10 @@ export default function AdminPage() {
 
   const handleSortChange = (sortBy: 'created_at' | 'title' | 'updated_at', sortOrder: 'asc' | 'desc') => {
     setFilters(prev => ({ ...prev, sort_by: sortBy, sort_order: sortOrder }));
+  };
+
+  const handleVisibilityChange = (filter: VisibilityFilter) => {
+    setVisibilityFilter(filter);
   };
 
   const handleFormSubmit = async (data: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -152,7 +171,9 @@ export default function AdminPage() {
           bookmark.description?.toLowerCase().includes(filters.query.toLowerCase()) ||
           bookmark.url.toLowerCase().includes(filters.query.toLowerCase())) {
         if (!filters.category_id || bookmark.category_id === filters.category_id) {
-          if (showPrivate === undefined || bookmark.is_private === showPrivate) {
+          if (visibilityFilter === 'all' ||
+              (visibilityFilter === 'private' && bookmark.is_private) ||
+              (visibilityFilter === 'public' && !bookmark.is_private)) {
             setBookmarks(prev => [bookmark, ...prev]);
           }
         }
@@ -177,28 +198,29 @@ export default function AdminPage() {
 
   if (status === 'loading' || (!session && status !== 'unauthenticated')) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--primary)]"></div>
       </div>
     );
   }
 
-  if (!session || session.user.role !== 'admin') {
+  if (!session || (session.user as ExtendedUser)?.role !== 'admin') {
     return null; // Will redirect via useEffect
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--background)] transition-colors duration-300">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-[var(--card)] shadow-sm border-b border-[var(--card-border)] glass-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-6 gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
-              <p className="text-gray-600">Manage your bookmarks and categories</p>
+              <h1 className="text-3xl font-bold text-[var(--foreground)] bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">LinkVault Admin</h1>
+              <p className="text-[var(--muted-foreground)]">Manage your bookmarks and categories</p>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3 items-center">
+              <ThemeSwitcher />
               <Link href="/">
                 <Button variant="outline">
                   View Public Site
@@ -215,7 +237,7 @@ export default function AdminPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Action Buttons */}
-        <div className="mb-8 flex gap-3">
+        <div className="mb-8 flex flex-wrap gap-3">
           <Button
             onClick={() => {
               setEditingBookmark(undefined);
@@ -234,7 +256,7 @@ export default function AdminPage() {
 
         {/* Search and Filters */}
         <div className="mb-8 space-y-4">
-          <div className="max-w-md">
+          <div className="w-full max-w-md">
             <SearchBar
               value={filters.query || ''}
               onChange={handleSearchChange}
@@ -247,10 +269,10 @@ export default function AdminPage() {
             selectedCategory={filters.category_id}
             sortBy={filters.sort_by || 'created_at'}
             sortOrder={filters.sort_order || 'desc'}
-            showPrivate={showPrivate}
+            visibilityFilter={visibilityFilter}
             onCategoryChange={handleCategoryChange}
             onSortChange={handleSortChange}
-            onPrivateToggle={setShowPrivate}
+            onVisibilityChange={handleVisibilityChange}
             isAdmin={true}
           />
         </div>
@@ -258,7 +280,7 @@ export default function AdminPage() {
         {/* Loading State */}
         {loading && (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--primary)]"></div>
           </div>
         )}
 
@@ -271,7 +293,7 @@ export default function AdminPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center py-12"
               >
-                <div className="text-gray-500">
+                <div className="text-[var(--muted-foreground)]">
                   {filters.query || filters.category_id ? (
                     <div>
                       <p className="text-lg mb-2">No bookmarks found</p>
@@ -289,7 +311,7 @@ export default function AdminPage() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+                className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
               >
                 <AnimatePresence>
                   {bookmarks.map((bookmark) => (
@@ -310,7 +332,7 @@ export default function AdminPage() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="mt-8 text-center text-sm text-gray-500"
+                className="mt-8 text-center text-sm text-[var(--muted-foreground)]"
               >
                 Managing {bookmarks.length} bookmark{bookmarks.length !== 1 ? 's' : ''}
               </motion.div>

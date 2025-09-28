@@ -1,18 +1,19 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
+import { Bookmark, Category } from '@/types';
 
 interface SSEEvent {
   type: string;
-  data: any;
+  data: unknown;
 }
 
 interface UseSSEOptions {
-  onBookmarkCreated?: (bookmark: any) => void;
-  onBookmarkUpdated?: (bookmark: any) => void;
+  onBookmarkCreated?: (bookmark: Bookmark) => void;
+  onBookmarkUpdated?: (bookmark: Bookmark) => void;
   onBookmarkDeleted?: (data: { id: number }) => void;
-  onCategoryCreated?: (category: any) => void;
-  onCategoryUpdated?: (category: any) => void;
+  onCategoryCreated?: (category: Category) => void;
+  onCategoryUpdated?: (category: Category) => void;
   onCategoryDeleted?: (data: { id: number }) => void;
 }
 
@@ -61,6 +62,9 @@ export function useSSE(options: UseSSEOptions) {
   }, []);
 
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+
     // Create EventSource connection
     eventSourceRef.current = new EventSource('/api/events');
 
@@ -84,7 +88,7 @@ export function useSSE(options: UseSSEOptions) {
   }, [handleMessage]);
 
   return {
-    isConnected: eventSourceRef.current?.readyState === EventSource.OPEN,
+    isConnected: typeof window !== 'undefined' && eventSourceRef.current?.readyState === 1,
     close: () => {
       if (eventSourceRef.current) {
         eventSourceRef.current.close();

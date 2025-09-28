@@ -14,8 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bookmark Manager",
-  description: "A simple and elegant bookmark management system",
+  title: "LinkVault - Your Digital Bookmark Sanctuary",
+  description: "Organize, discover, and manage your digital bookmarks with style. Beautiful themes, real-time collaboration, and powerful search.",
+  keywords: ["bookmarks", "links", "organization", "productivity", "web", "save", "collection"],
+  authors: [{ name: "LinkVault Team" }],
+  creator: "LinkVault",
 };
 
 export default function RootLayout({

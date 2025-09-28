@@ -4,13 +4,13 @@ import { NextRequest } from 'next/server';
 const connections = new Set<WritableStreamDefaultWriter>();
 
 // Helper to broadcast events to all connections
-export function broadcastEvent(type: string, data: any) {
+export function broadcastEvent(type: string, data: unknown) {
   const message = `data: ${JSON.stringify({ type, data })}\n\n`;
 
   connections.forEach(async (writer) => {
     try {
       await writer.write(new TextEncoder().encode(message));
-    } catch (error) {
+    } catch {
       // Remove dead connections
       connections.delete(writer);
     }
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       const writer = controller;
 
       // Add this connection to our set
-      connections.add(writer as any);
+      connections.add(writer as WritableStreamDefaultWriter);
 
       // Send initial connection message
       const welcome = `data: ${JSON.stringify({
@@ -36,10 +36,10 @@ export async function GET(request: NextRequest) {
 
       // Handle client disconnect
       request.signal?.addEventListener('abort', () => {
-        connections.delete(writer as any);
+        connections.delete(writer as WritableStreamDefaultWriter);
         try {
           controller.close();
-        } catch (error) {
+        } catch {
           // Controller already closed
         }
       });

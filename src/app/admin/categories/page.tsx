@@ -2,6 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+
+interface ExtendedUser {
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role?: string;
+}
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit, Trash2, ArrowLeft } from 'lucide-react';
@@ -24,7 +31,7 @@ export default function CategoriesPage() {
   // Redirect if not authenticated
   useEffect(() => {
     if (status === 'loading') return;
-    if (!session || session.user.role !== 'admin') {
+    if (!session || (session.user as ExtendedUser)?.role !== 'admin') {
       router.push('/admin/login');
     }
   }, [session, status, router]);
@@ -42,7 +49,7 @@ export default function CategoriesPage() {
   };
 
   useEffect(() => {
-    if (session?.user?.role === 'admin') {
+    if ((session?.user as ExtendedUser)?.role === 'admin') {
       fetchCategories();
     }
   }, [session]);
@@ -110,7 +117,7 @@ export default function CategoriesPage() {
     );
   }
 
-  if (!session || session.user.role !== 'admin') {
+  if (!session || (session.user as ExtendedUser)?.role !== 'admin') {
     return null;
   }
 

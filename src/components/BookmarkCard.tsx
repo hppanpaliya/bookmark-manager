@@ -19,28 +19,30 @@ export function BookmarkCard({ bookmark, isAdmin = false, onEdit, onDelete }: Bo
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      whileHover={{ y: -2 }}
-      className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow"
+      whileHover={{ y: -4, scale: 1.02 }}
+      className="bg-[var(--card)] rounded-xl border border-[var(--card-border)] p-4 sm:p-6 card-shadow card-hover glass-card transition-all duration-200"
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-lg font-semibold text-gray-900 truncate">
+            <h3 className="text-lg font-semibold text-[var(--foreground)] truncate">
               {bookmark.title}
             </h3>
             {bookmark.is_private && (
-              <Lock size={16} className="text-gray-500 flex-shrink-0" />
+              <Lock size={16} className="text-[var(--muted-foreground)] flex-shrink-0" />
             )}
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-            <span>{getDomainFromUrl(bookmark.url)}</span>
+          <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)] mb-3">
+            <span className="font-mono text-xs bg-[var(--muted)] px-2 py-1 rounded-full">
+              {getDomainFromUrl(bookmark.url)}
+            </span>
             <span>•</span>
             <span>{formatDate(bookmark.created_at)}</span>
           </div>
 
           {bookmark.description && (
-            <p className="text-gray-700 text-sm mb-3 line-clamp-2">
+            <p className="text-[var(--foreground)] opacity-80 text-sm mb-3 line-clamp-2">
               {bookmark.description}
             </p>
           )}
@@ -55,15 +57,15 @@ export function BookmarkCard({ bookmark, isAdmin = false, onEdit, onDelete }: Bo
           )}
 
           {isAdmin && (bookmark.username || bookmark.password) && (
-            <div className="flex gap-4 text-xs text-gray-500 mb-3">
+            <div className="flex gap-4 text-xs text-[var(--muted-foreground)] mb-3">
               {bookmark.username && (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 bg-[var(--muted)] px-2 py-1 rounded">
                   <User size={12} />
                   <span className="font-mono">{bookmark.username}</span>
                 </div>
               )}
               {bookmark.password && (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 bg-[var(--muted)] px-2 py-1 rounded">
                   <Key size={12} />
                   <span className="font-mono">••••••••</span>
                 </div>
@@ -73,35 +75,41 @@ export function BookmarkCard({ bookmark, isAdmin = false, onEdit, onDelete }: Bo
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-4">
-        <a
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 gap-3">
+        <motion.a
           href={bookmark.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="inline-flex items-center gap-2 text-[var(--primary)] hover:opacity-80 transition-all font-medium px-3 py-1.5 rounded-lg bg-[var(--primary)]/10 hover:bg-[var(--primary)]/20 border border-[var(--primary)]/20"
         >
           <ExternalLink size={16} />
-          <span className="text-sm font-medium">Visit</span>
-        </a>
+          <span className="text-sm">Visit</span>
+        </motion.a>
 
         {isAdmin && (
           <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onEdit?.(bookmark)}
-              className="text-gray-600 hover:text-gray-900"
-            >
-              <Edit size={16} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onDelete?.(bookmark.id)}
-              className="text-red-600 hover:text-red-900"
-            >
-              <Trash2 size={16} />
-            </Button>
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onEdit?.(bookmark)}
+                className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)]"
+              >
+                <Edit size={16} />
+              </Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onDelete?.(bookmark.id)}
+                className="text-[var(--destructive)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)] hover:bg-opacity-10"
+              >
+                <Trash2 size={16} />
+              </Button>
+            </motion.div>
           </div>
         )}
       </div>
