@@ -74,53 +74,90 @@ export function BookmarkForm({ bookmark, categories, onSubmit, onCancel, isLoadi
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 backdrop-blur-sm"
     >
       <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        className="bg-[var(--card)] rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-[var(--border)]"
       >
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">
+          <motion.h2
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-xl font-semibold text-[var(--foreground)]"
+          >
             {bookmark ? 'Edit Bookmark' : 'Add Bookmark'}
-          </h2>
-          <Button variant="ghost" size="sm" onClick={onCancel}>
-            <X size={20} />
-          </Button>
+          </motion.h2>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Button variant="ghost" size="sm" onClick={onCancel}>
+              <X size={20} />
+            </Button>
+          </motion.div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="title" className="block text-sm font-medium text-[var(--foreground)] mb-1">
               Title *
             </label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className={errors.title ? 'border-red-500' : ''}
-            />
-            {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
+            <motion.div
+              animate={errors.title ? { x: [-2, 2, -2, 2, 0] } : {}}
+              transition={{ duration: 0.3 }}
+            >
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className={errors.title ? 'border-[var(--destructive)] focus:border-[var(--destructive)]' : ''}
+              />
+            </motion.div>
+            {errors.title && (
+              <motion.p
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-[var(--destructive)] text-xs mt-1"
+              >
+                {errors.title}
+              </motion.p>
+            )}
           </div>
 
           <div>
-            <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="url" className="block text-sm font-medium text-[var(--foreground)] mb-1">
               URL *
             </label>
-            <Input
-              id="url"
-              type="url"
-              value={formData.url}
-              onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-              className={errors.url ? 'border-red-500' : ''}
-            />
-            {errors.url && <p className="text-red-500 text-xs mt-1">{errors.url}</p>}
+            <motion.div
+              animate={errors.url ? { x: [-2, 2, -2, 2, 0] } : {}}
+              transition={{ duration: 0.3 }}
+            >
+              <Input
+                id="url"
+                type="url"
+                value={formData.url}
+                onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                className={errors.url ? 'border-[var(--destructive)] focus:border-[var(--destructive)]' : ''}
+              />
+            </motion.div>
+            {errors.url && (
+              <motion.p
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-[var(--destructive)] text-xs mt-1"
+              >
+                {errors.url}
+              </motion.p>
+            )}
           </div>
 
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                    <div>
+            <label htmlFor="description" className="block text-sm font-medium text-[var(--foreground)] mb-1">
               Description
             </label>
             <Textarea
@@ -132,14 +169,14 @@ export function BookmarkForm({ bookmark, categories, onSubmit, onCancel, isLoadi
           </div>
 
           <div>
-            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="category" className="block text-sm font-medium text-[var(--foreground)] mb-1">
               Category
             </label>
             <select
               id="category"
               value={formData.category_id || ''}
               onChange={(e) => setFormData({ ...formData, category_id: e.target.value ? parseInt(e.target.value) : undefined })}
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              className="flex h-10 w-full rounded-md border border-[var(--border)] bg-[var(--input)] px-3 py-2 text-sm text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="">No Category</option>
               {categories.map((category) => (
@@ -150,12 +187,12 @@ export function BookmarkForm({ bookmark, categories, onSubmit, onCancel, isLoadi
             </select>
           </div>
 
-          <div className="border-t pt-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Login Credentials (Optional)</h3>
+          <div className="border-t border-[var(--border)] pt-4">
+            <h3 className="text-sm font-medium text-[var(--foreground)] mb-3">Login Credentials (Optional)</h3>
 
             <div className="space-y-3">
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="username" className="block text-sm font-medium text-[var(--foreground)] mb-1">
                   Username
                 </label>
                 <Input
@@ -166,7 +203,7 @@ export function BookmarkForm({ bookmark, categories, onSubmit, onCancel, isLoadi
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="password" className="block text-sm font-medium text-[var(--foreground)] mb-1">
                   Password
                 </label>
                 <div className="relative">
@@ -180,7 +217,7 @@ export function BookmarkForm({ bookmark, categories, onSubmit, onCancel, isLoadi
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
                     title={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -196,20 +233,42 @@ export function BookmarkForm({ bookmark, categories, onSubmit, onCancel, isLoadi
               type="checkbox"
               checked={formData.is_private}
               onChange={(e) => setFormData({ ...formData, is_private: e.target.checked })}
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--ring)] border-[var(--border)] rounded"
             />
-            <label htmlFor="is_private" className="ml-2 block text-sm text-gray-700">
+            <label htmlFor="is_private" className="ml-2 block text-sm text-[var(--foreground)]">
               Keep this bookmark private
             </label>
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button type="submit" disabled={isLoading} className="flex-1">
-              {isLoading ? 'Saving...' : bookmark ? 'Update' : 'Add'} Bookmark
-            </Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1"
+            >
+              <Button type="submit" disabled={isLoading} className="w-full">
+                {isLoading ? (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center gap-2"
+                  >
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Saving...
+                  </motion.div>
+                ) : (
+                  bookmark ? 'Update' : 'Add'
+                )} Bookmark
+              </Button>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Cancel
+              </Button>
+            </motion.div>
           </div>
         </form>
       </motion.div>

@@ -12,10 +12,12 @@ interface ExtendedUser {
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit, Trash2, ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
 import { Category } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PageTransition } from '@/components/PageTransition';
+import { NavigationLink } from '@/components/NavigationLink';
+import { LoadingSpinner } from '@/components/Skeleton';
 
 export default function CategoriesPage() {
   const { data: session, status } = useSession();
@@ -71,7 +73,7 @@ export default function CategoriesPage() {
       if (response.ok) {
         setShowForm(false);
         setEditingCategory(undefined);
-        setFormData({ name: '', color: '#3B82F6' });
+        setFormData({ name: '', color: '#3B82F6', emoji: '' });
         await fetchCategories();
       }
     } catch (error) {
@@ -122,37 +124,57 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--background)]">
+    <PageTransition>
+      <div className="min-h-screen bg-[var(--background)]">
       {/* Header */}
-      <header className="bg-[var(--card)] shadow-sm border-b border-[var(--border)]">
+      <motion.header
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="bg-[var(--card)] shadow-sm border-b border-[var(--border)] sticky top-0 z-40"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
-            <div className="flex items-center gap-4">
-              <Link href="/admin">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="flex items-center gap-4"
+            >
+              <NavigationLink
+                href="/admin"
+                className="text-[var(--foreground)] hover:text-[var(--primary)]"
+                activeClassName="bg-[var(--primary)]/10 text-[var(--primary)]"
+              >
                 <Button variant="ghost" size="sm">
                   <ArrowLeft size={20} className="mr-2" />
                   Back to Admin
                 </Button>
-              </Link>
+              </NavigationLink>
               <div>
                 <h1 className="text-3xl font-bold text-[var(--foreground)]">Categories</h1>
                 <p className="text-[var(--muted-foreground)]">Organize your bookmarks with categories</p>
               </div>
-            </div>
+            </motion.div>
 
-            <Button
-              onClick={() => {
-                setEditingCategory(undefined);
-                setFormData({ name: '', color: '#3B82F6', emoji: '' });
-                setShowForm(true);
-              }}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
             >
-              <Plus size={20} className="mr-2" />
-              Add Category
-            </Button>
+              <Button
+                onClick={() => {
+                  setEditingCategory(undefined);
+                  setFormData({ name: '', color: '#3B82F6', emoji: '' });
+                  setShowForm(true);
+                }}
+              >
+                <Plus size={20} className="mr-2" />
+                Add Category
+              </Button>
+            </motion.div>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Category Form */}
@@ -231,8 +253,28 @@ export default function CategoriesPage() {
 
         {/* Categories List */}
         {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--primary)]"></div>
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-[var(--card)] rounded-lg border border-[var(--border)] p-4 flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <LoadingSpinner size="sm" />
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 bg-[var(--muted)] rounded animate-pulse w-32" />
+                    <div className="h-3 bg-[var(--muted)] rounded animate-pulse w-24" />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <div className="h-8 w-8 bg-[var(--muted)] rounded animate-pulse" />
+                  <div className="h-8 w-8 bg-[var(--muted)] rounded animate-pulse" />
+                </div>
+              </motion.div>
+            ))}
           </div>
         ) : categories.length === 0 ? (
           <motion.div
@@ -304,5 +346,6 @@ export default function CategoriesPage() {
         )}
       </div>
     </div>
+    </PageTransition>
   );
 }

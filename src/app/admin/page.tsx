@@ -5,6 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 import { BookmarkDashboard } from '@/components/BookmarkDashboard';
+import { PageTransition } from '@/components/PageTransition';
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -32,10 +33,12 @@ export default function AdminPage() {
   }
 
   return (
-    <BookmarkDashboard
-      variant="admin"
-      isAdminUser={true}
-      onLogout={() => signOut({ callbackUrl: '/' })}
-    />
+    <PageTransition>
+      <BookmarkDashboard
+        variant="admin"
+        isAdminUser={true}
+        onLogout={() => signOut({ callbackUrl: '/' })}
+      />
+    </PageTransition>
   );
 }

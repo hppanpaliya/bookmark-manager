@@ -19,6 +19,8 @@ import { SearchBar } from '@/components/SearchBar';
 import { FilterPanel, VisibilityFilter } from '@/components/FilterPanel';
 import { Button } from '@/components/ui/Button';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { NavigationLink } from '@/components/NavigationLink';
+import { Skeleton, LoadingSpinner } from '@/components/Skeleton';
 import { useSSE } from '@/lib/useSSE';
 
 interface BookmarkDashboardProps {
@@ -239,38 +241,69 @@ export function BookmarkDashboard({ variant, isAdminUser, onLogout }: BookmarkDa
     <div className="min-h-screen bg-[var(--background)] transition-colors duration-300">
       {/* Header */}
       {isAdminView ? (
-        <header className="bg-[var(--card)] shadow-sm border-b border-[var(--card-border)] glass-card">
+        <motion.header
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="bg-[var(--card)] shadow-sm border-b border-[var(--card-border)] glass-card sticky top-0 z-40"
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-6 gap-4">
-              <div>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+              >
                 <h1 className="text-3xl font-bold text-[var(--foreground)] bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   LinkVault Admin
                 </h1>
                 <p className="text-[var(--muted-foreground)]">Manage your bookmarks and categories</p>
-              </div>
+              </motion.div>
 
-              <div className="flex flex-wrap gap-3 items-center">
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-wrap gap-3 items-center"
+              >
                 <ThemeSwitcher />
-                <Link href="/">
+                <NavigationLink
+                  href="/"
+                  className="text-[var(--foreground)] hover:text-[var(--primary)]"
+                  activeClassName="bg-[var(--primary)]/10 text-[var(--primary)]"
+                >
                   <Button variant="outline">View Public Site</Button>
-                </Link>
+                </NavigationLink>
                 {onLogout && (
-                  <Button variant="outline" onClick={onLogout}>
-                    <LogOut size={20} className="mr-2" />
-                    Logout
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button variant="outline" onClick={onLogout}>
+                      <LogOut size={20} className="mr-2" />
+                      Logout
+                    </Button>
+                  </motion.div>
                 )}
-              </div>
+              </motion.div>
             </div>
           </div>
-        </header>
+        </motion.header>
       ) : (
-        <header className="bg-[var(--card)] border-b border-[var(--card-border)] glass-card">
+        <motion.header
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="bg-[var(--card)] border-b border-[var(--card-border)] glass-card sticky top-0 z-40"
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-6 gap-4">
-              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="flex items-center gap-4"
+              >
+                <motion.div
+                  whileHover={{ scale: 1.05, rotate: 5 }}
+                  className="flex items-center gap-3"
+                >
+                  <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
                     <Sparkles className="h-6 w-6 text-white" />
                   </div>
                   <div>
@@ -279,30 +312,43 @@ export function BookmarkDashboard({ variant, isAdminUser, onLogout }: BookmarkDa
                     </h1>
                     <p className="text-[var(--muted-foreground)] text-sm">Your digital bookmark sanctuary</p>
                   </div>
-                </div>
+                </motion.div>
               </motion.div>
 
-              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col sm:flex-row gap-3 items-center">
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-col sm:flex-row gap-3 items-center"
+              >
                 <ThemeSwitcher />
                 {isAdminUser ? (
-                  <Link href="/admin">
+                  <NavigationLink
+                    href="/admin"
+                    className="text-[var(--foreground)] hover:text-[var(--primary)]"
+                    activeClassName="bg-[var(--primary)]/10 text-[var(--primary)]"
+                  >
                     <Button variant="outline" className="gap-2">
                       <Settings size={18} />
                       Admin Panel
                     </Button>
-                  </Link>
+                  </NavigationLink>
                 ) : (
-                  <Link href="/admin/login">
+                  <NavigationLink
+                    href="/admin/login"
+                    className="text-[var(--foreground)] hover:text-[var(--primary)]"
+                    activeClassName="bg-[var(--primary)]/10 text-[var(--primary)]"
+                  >
                     <Button className="gap-2">
                       <Globe size={18} />
                       Admin Login
                     </Button>
-                  </Link>
+                  </NavigationLink>
                 )}
               </motion.div>
             </div>
           </div>
-        </header>
+        </motion.header>
       )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -344,14 +390,46 @@ export function BookmarkDashboard({ variant, isAdminUser, onLogout }: BookmarkDa
 
         {/* Loading State */}
         {loading && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-16">
-            <div className="relative">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-[var(--muted)] border-t-[var(--primary)]"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Sparkles className="h-5 w-5 text-[var(--primary)] animate-pulse" />
-              </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-8"
+          >
+            {/* Loading header */}
+            <div className="text-center">
+              <LoadingSpinner size="lg" className="mb-4" />
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-[var(--muted-foreground)]"
+              >
+                Loading your bookmarks...
+              </motion.p>
             </div>
-            <p className="text-[var(--muted-foreground)] mt-4 text-sm">Loading your bookmarks...</p>
+
+            {/* Skeleton cards */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className={
+                isAdminView
+                  ? 'grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                  : 'grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+              }
+            >
+              {Array.from({ length: isAdminView ? 6 : 8 }).map((_, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * i }}
+                >
+                  <Skeleton variant="card" />
+                </motion.div>
+              ))}
+            </motion.div>
           </motion.div>
         )}
 
@@ -413,8 +491,11 @@ export function BookmarkDashboard({ variant, isAdminUser, onLogout }: BookmarkDa
               </motion.div>
             ) : (
               <motion.div
+                key={`bookmarks-${filters.query}-${filters.category_id}-${filters.sort_by}-${filters.sort_order}-${visibilityFilter}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
                 className={
                   isAdminView
                     ? 'grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
@@ -425,15 +506,29 @@ export function BookmarkDashboard({ variant, isAdminUser, onLogout }: BookmarkDa
                   {bookmarks.map((bookmark, index) => (
                     <motion.div
                       key={bookmark.id}
+                      layout
                       initial={{ opacity: 0, y: 20, scale: 0.9 }}
                       animate={{
                         opacity: 1,
                         y: 0,
                         scale: 1,
-                        transition: { delay: isAdminView ? 0 : index * 0.05 },
+                        transition: {
+                          delay: isAdminView ? 0 : Math.min(index * 0.05, 0.3),
+                          type: 'spring',
+                          stiffness: 300,
+                          damping: 30
+                        }
                       }}
-                      exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-                      layout
+                      exit={{
+                        opacity: 0,
+                        scale: 0.8,
+                        transition: { duration: 0.2 }
+                      }}
+                      whileHover={{
+                        y: -6,
+                        scale: 1.02,
+                        transition: { type: 'spring', stiffness: 400, damping: 25 }
+                      }}
                     >
                       <BookmarkCard
                         bookmark={bookmark}

@@ -50,7 +50,7 @@ export function BookmarkCard({ bookmark, isAdmin = false, onEdit, onDelete }: Bo
               <img
                 src={getFaviconUrl(bookmark.url)!}
                 alt=""
-                className="w-6 h-6 rounded-sm"
+                className="w-12 h-12 rounded-sm"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
