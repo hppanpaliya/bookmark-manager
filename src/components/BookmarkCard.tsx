@@ -14,6 +14,15 @@ interface BookmarkCardProps {
   onDelete?: (id: number) => void;
 }
 
+const getFaviconUrl = (url: string) => {
+  try {
+    const domain = new URL(url).hostname;
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+  } catch {
+    return null;
+  }
+};
+
 export function BookmarkCard({ bookmark, isAdmin = false, onEdit, onDelete }: BookmarkCardProps) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -37,6 +46,16 @@ export function BookmarkCard({ bookmark, isAdmin = false, onEdit, onDelete }: Bo
           </div>
 
           <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)] mb-3">
+            {getFaviconUrl(bookmark.url) && (
+              <img
+                src={getFaviconUrl(bookmark.url)!}
+                alt=""
+                className="w-6 h-6 rounded-sm"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            )}
             <span className="font-mono text-xs bg-[var(--muted)] px-2 py-1 rounded-full">
               {getDomainFromUrl(bookmark.url)}
             </span>
@@ -55,6 +74,7 @@ export function BookmarkCard({ bookmark, isAdmin = false, onEdit, onDelete }: Bo
               className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white mb-3"
               style={{ backgroundColor: bookmark.category.color }}
             >
+              {bookmark.category.emoji && <span className="mr-1">{bookmark.category.emoji}</span>}
               {bookmark.category.name}
             </span>
           )}

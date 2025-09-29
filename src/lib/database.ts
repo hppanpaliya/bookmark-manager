@@ -24,9 +24,17 @@ function initializeDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT UNIQUE NOT NULL,
       color TEXT DEFAULT '#3B82F6',
+      emoji TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Add emoji column if it doesn't exist (for migration)
+  try {
+    db.exec(`ALTER TABLE categories ADD COLUMN emoji TEXT`);
+  } catch (error) {
+    // Column might already exist, ignore error
+  }
 
   // Create bookmarks table
   db.exec(`
@@ -71,8 +79,8 @@ export function getAllCategories(): Category[] {
 
 export function createCategory(input: CategoryCreateInput): Category {
   const db = getDatabase();
-  const stmt = db.prepare('INSERT INTO categories (name, color) VALUES (?, ?)');
-  const result = stmt.run(input.name, input.color || '#3B82F6');
+  const stmt = db.prepare('INSERT INTO categories (name, color, emoji) VALUES (?, ?, ?)');
+  const result = stmt.run(input.name, input.color || '#3B82F6', input.emoji || null);
   return db.prepare('SELECT * FROM categories WHERE id = ?').get(result.lastInsertRowid) as Category;
 }
 
@@ -88,6 +96,10 @@ export function updateCategory(id: number, input: Partial<CategoryCreateInput>):
   if (input.color !== undefined) {
     updates.push('color = ?');
     values.push(input.color);
+  }
+  if (input.emoji !== undefined) {
+    updates.push('emoji = ?');
+    values.push(input.emoji);
   }
 
   if (updates.length === 0) {
@@ -172,7 +184,8 @@ export function getAllBookmarks(filters?: SearchFilters, pagination?: Pagination
     SELECT
       b.*,
       c.name as category_name,
-      c.color as category_color
+      c.color as category_color,
+      c.emoji as category_emoji
     ${baseQuery}
     ${orderClause}
     ${limitClause}
@@ -191,6 +204,7 @@ export function getAllBookmarks(filters?: SearchFilters, pagination?: Pagination
     updated_at: string;
     category_name: string | null;
     category_color: string | null;
+    category_emoji: string | null;
   }>;
 
   const formattedBookmarks: Bookmark[] = bookmarks.map(row => ({
@@ -208,6 +222,7 @@ export function getAllBookmarks(filters?: SearchFilters, pagination?: Pagination
       id: row.category_id,
       name: row.category_name!,
       color: row.category_color!,
+      emoji: row.category_emoji || undefined,
       created_at: row.created_at
     } : undefined
   }));
@@ -228,7 +243,8 @@ export function getBookmarkById(id: number, includePrivate = false): Bookmark | 
     SELECT
       b.*,
       c.name as category_name,
-      c.color as category_color
+      c.color as category_color,
+      c.emoji as category_emoji
     FROM bookmarks b
     LEFT JOIN categories c ON b.category_id = c.id
     ${whereClause}
@@ -247,6 +263,7 @@ export function getBookmarkById(id: number, includePrivate = false): Bookmark | 
     updated_at: string;
     category_name: string | null;
     category_color: string | null;
+    category_emoji: string | null;
   } | undefined;
   if (!row) return null;
 
@@ -265,6 +282,7 @@ export function getBookmarkById(id: number, includePrivate = false): Bookmark | 
       id: row.category_id,
       name: row.category_name!,
       color: row.category_color!,
+      emoji: row.category_emoji || undefined,
       created_at: row.created_at
     } : undefined
   };

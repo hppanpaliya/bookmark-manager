@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -13,7 +13,19 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
+
+  // Load saved password on component mount
+  useEffect(() => {
+    const savedPassword = localStorage.getItem('admin-password');
+    const savedRememberMe = localStorage.getItem('admin-remember-me') === 'true';
+    
+    if (savedPassword && savedRememberMe) {
+      setPassword(savedPassword);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +44,15 @@ export default function LoginPage() {
         // Check if sign in was successful
         const session = await getSession();
         if (session) {
+          // Handle remember me functionality
+          if (rememberMe) {
+            localStorage.setItem('admin-password', password);
+            localStorage.setItem('admin-remember-me', 'true');
+          } else {
+            localStorage.removeItem('admin-password');
+            localStorage.removeItem('admin-remember-me');
+          }
+          
           router.push('/admin');
         } else {
           setError('Login failed');
@@ -45,20 +66,20 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[var(--background)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-md w-full space-y-8"
       >
         <div>
-          <div className="mx-auto h-12 w-12 bg-blue-600 rounded-full flex items-center justify-center">
-            <Lock className="h-6 w-6 text-white" />
+          <div className="mx-auto h-12 w-12 bg-[var(--primary)] rounded-full flex items-center justify-center">
+            <Lock className="h-6 w-6 text-[var(--primary-foreground)]" />
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-[var(--foreground)]">
             Admin Login
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-[var(--muted-foreground)]">
             Enter your admin password to access the management interface
           </p>
         </div>
@@ -79,11 +100,25 @@ export default function LoginPage() {
             />
           </div>
 
+          <div className="flex items-center">
+            <input
+              id="remember-me"
+              name="remember-me"
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--ring)] border-[var(--border)] rounded"
+            />
+            <label htmlFor="remember-me" className="ml-2 block text-sm text-[var(--foreground)]">
+              Remember me
+            </label>
+          </div>
+
           {error && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-red-600 text-sm text-center"
+              className="text-[var(--destructive)] text-sm text-center"
             >
               {error}
             </motion.div>
@@ -100,7 +135,7 @@ export default function LoginPage() {
           </div>
 
           <div className="text-center">
-            <Link href="/" className="text-blue-600 hover:text-blue-500 text-sm">
+            <Link href="/" className="text-[var(--primary)] hover:opacity-80 text-sm">
               ← Back to Bookmarks
             </Link>
           </div>

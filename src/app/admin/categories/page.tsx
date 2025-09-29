@@ -25,7 +25,7 @@ export default function CategoriesPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | undefined>();
-  const [formData, setFormData] = useState({ name: '', color: '#3B82F6' });
+  const [formData, setFormData] = useState({ name: '', color: '#3B82F6', emoji: '' });
   const [formLoading, setFormLoading] = useState(false);
 
   // Redirect if not authenticated
@@ -83,7 +83,7 @@ export default function CategoriesPage() {
 
   const handleEdit = (category: Category) => {
     setEditingCategory(category);
-    setFormData({ name: category.name, color: category.color });
+    setFormData({ name: category.name, color: category.color, emoji: category.emoji || '' });
     setShowForm(true);
   };
 
@@ -106,13 +106,13 @@ export default function CategoriesPage() {
   const resetForm = () => {
     setShowForm(false);
     setEditingCategory(undefined);
-    setFormData({ name: '', color: '#3B82F6' });
+    setFormData({ name: '', color: '#3B82F6', emoji: '' });
   };
 
   if (status === 'loading' || (!session && status !== 'unauthenticated')) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--primary)]"></div>
       </div>
     );
   }
@@ -122,9 +122,9 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--background)]">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-[var(--card)] shadow-sm border-b border-[var(--border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center gap-4">
@@ -135,15 +135,15 @@ export default function CategoriesPage() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Categories</h1>
-                <p className="text-gray-600">Organize your bookmarks with categories</p>
+                <h1 className="text-3xl font-bold text-[var(--foreground)]">Categories</h1>
+                <p className="text-[var(--muted-foreground)]">Organize your bookmarks with categories</p>
               </div>
             </div>
 
             <Button
               onClick={() => {
                 setEditingCategory(undefined);
-                setFormData({ name: '', color: '#3B82F6' });
+                setFormData({ name: '', color: '#3B82F6', emoji: '' });
                 setShowForm(true);
               }}
             >
@@ -162,15 +162,15 @@ export default function CategoriesPage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="bg-white rounded-lg border border-gray-200 p-6 mb-8"
+              className="bg-[var(--card)] rounded-lg border border-[var(--border)] p-6 mb-8"
             >
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">
                 {editingCategory ? 'Edit Category' : 'Add Category'}
               </h2>
 
               <form onSubmit={handleFormSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="name" className="block text-sm font-medium text-[var(--foreground)] mb-1">
                     Name
                   </label>
                   <Input
@@ -182,7 +182,7 @@ export default function CategoriesPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="color" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="color" className="block text-sm font-medium text-[var(--foreground)] mb-1">
                     Color
                   </label>
                   <div className="flex items-center gap-3">
@@ -191,15 +191,29 @@ export default function CategoriesPage() {
                       type="color"
                       value={formData.color}
                       onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                      className="h-10 w-16 border border-gray-300 rounded cursor-pointer"
+                      className="h-10 w-16 border border-[var(--border)] rounded cursor-pointer"
                     />
                     <div
-                      className="px-3 py-2 rounded-md text-white text-sm font-medium"
+                      className="px-3 py-2 rounded-md text-white text-sm font-medium flex items-center gap-2"
                       style={{ backgroundColor: formData.color }}
                     >
-                      {formData.name || 'Preview'}
+                      {formData.emoji && <span>{formData.emoji}</span>}
+                      <span>{formData.name || 'Preview'}</span>
                     </div>
                   </div>
+                </div>
+
+                <div>
+                  <label htmlFor="emoji" className="block text-sm font-medium text-[var(--foreground)] mb-1">
+                    Emoji (optional)
+                  </label>
+                  <Input
+                    id="emoji"
+                    value={formData.emoji}
+                    onChange={(e) => setFormData({ ...formData, emoji: e.target.value })}
+                    placeholder="🎯"
+                    maxLength={2}
+                  />
                 </div>
 
                 <div className="flex gap-3">
@@ -218,7 +232,7 @@ export default function CategoriesPage() {
         {/* Categories List */}
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--primary)]"></div>
           </div>
         ) : categories.length === 0 ? (
           <motion.div
@@ -226,7 +240,7 @@ export default function CategoriesPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center py-12"
           >
-            <div className="text-gray-500">
+            <div className="text-[var(--muted-foreground)]">
               <p className="text-lg mb-2">No categories yet</p>
               <p>Create your first category to organize your bookmarks!</p>
             </div>
@@ -242,16 +256,25 @@ export default function CategoriesPage() {
                 key={category.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between"
+                className="bg-[var(--card)] rounded-lg border border-[var(--border)] p-4 flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <div
-                    className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: category.color }}
-                  />
+                  {category.emoji ? (
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
+                      style={{ backgroundColor: category.color }}
+                    >
+                      {category.emoji}
+                    </div>
+                  ) : (
+                    <div
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: category.color }}
+                    />
+                  )}
                   <div>
-                    <h3 className="font-medium text-gray-900">{category.name}</h3>
-                    <p className="text-sm text-gray-500">
+                    <h3 className="font-medium text-[var(--foreground)]">{category.name}</h3>
+                    <p className="text-sm text-[var(--muted-foreground)]">
                       Created {new Date(category.created_at).toLocaleDateString()}
                     </p>
                   </div>
@@ -262,7 +285,7 @@ export default function CategoriesPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleEdit(category)}
-                    className="text-gray-600 hover:text-gray-900"
+                    className="text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
                   >
                     <Edit size={16} />
                   </Button>
@@ -270,7 +293,7 @@ export default function CategoriesPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDelete(category.id)}
-                    className="text-red-600 hover:text-red-900"
+                    className="text-[var(--destructive)] hover:opacity-80"
                   >
                     <Trash2 size={16} />
                   </Button>

@@ -2,6 +2,7 @@ export interface Category {
   id: number;
   name: string;
   color: string;
+  emoji?: string;
   created_at: string;
 }
 
@@ -42,6 +43,7 @@ export interface BookmarkUpdateInput {
 export interface CategoryCreateInput {
   name: string;
   color?: string;
+  emoji?: string;
 }
 
 export interface SearchFilters {
