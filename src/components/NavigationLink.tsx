@@ -28,8 +28,13 @@ export function NavigationLink({
     <Link href={href} onClick={onClick}>
       <motion.div
         className={cn(
-          'relative px-3 py-2 rounded-lg transition-colors duration-200',
-          isActive ? activeClassName : 'hover:bg-[var(--accent)]',
+          'relative inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium transition-all duration-200',
+          isActive
+            ? cn(
+                'bg-[color-mix(in srgb, var(--primary) 16%, transparent)] text-[var(--primary-foreground)] shadow-[var(--shadow-card)]/45',
+                activeClassName
+              )
+            : 'text-[color-mix(in srgb, var(--muted-foreground) 85%, transparent 15%)] hover:bg-[color-mix(in srgb, var(--accent) 75%, transparent 25%)] hover:text-[var(--foreground)]',
           className
         )}
         whileHover={{ scale: 1.05 }}
@@ -39,7 +44,7 @@ export function NavigationLink({
         {isActive && (
           <motion.div
             layoutId="active-nav-indicator"
-            className="absolute inset-0 bg-[var(--accent)] rounded-lg -z-10"
+            className="absolute inset-0 -z-10 rounded-2xl border border-[color-mix(in srgb, var(--primary) 28%, transparent)] bg-[color-mix(in srgb, var(--primary) 20%, transparent)] shadow-[var(--shadow-card)]/40"
             initial={false}
             transition={{ type: 'spring', stiffness: 500, damping: 30 }}
           />

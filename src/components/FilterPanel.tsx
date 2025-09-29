@@ -54,7 +54,11 @@ export function FilterPanel({
       {/* Category Filter */}
       <Menu as="div" className="relative inline-block text-left">
         <div>
-          <Menu.Button as={Button} variant="outline" className="inline-flex w-full justify-center gap-x-1.5">
+          <Menu.Button
+            as={Button}
+            variant="outline"
+      className="inline-flex w-full justify-center gap-x-1.5 rounded-2xl bg-[color-mix(in srgb, var(--card) 88%, transparent 12%)] px-5 py-2 text-sm"
+          >
             <Filter className="h-4 w-4" />
             {selectedCategoryName}
             <ChevronDownIcon className="-mr-1 h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -70,14 +74,16 @@ export function FilterPanel({
           leaveFrom="transform opacity-100 scale-100 translate-y-0"
           leaveTo="transform opacity-0 scale-95 translate-y-1"
         >
-          <Menu.Items className="absolute left-0 z-10 mt-2 w-56 origin-top-left rounded-md bg-[var(--card)] shadow-lg ring-1 ring-[var(--card-border)] focus:outline-none border border-[var(--card-border)]">
+          <Menu.Items className="absolute left-0 z-50 mt-2 w-56 origin-top-left overflow-hidden rounded-3xl border border-[color-mix(in srgb, var(--primary) 18%, var(--card-border))] bg-[color-mix(in srgb, var(--card) 92%, transparent 8%)] shadow-[var(--shadow-card)]/45 backdrop-blur">
             <div className="py-1">
               <Menu.Item>
                 {({ active }) => (
                   <button
                     onClick={() => onCategoryChange(undefined)}
                     className={cn(
-                      active ? 'bg-[var(--accent)] text-[var(--accent-foreground)]' : 'text-[var(--foreground)]',
+                      active
+                        ? 'bg-[color-mix(in srgb, var(--primary) 18%, transparent)] text-[var(--primary-foreground)]'
+                        : 'text-[var(--foreground)]',
                       'block w-full px-4 py-2 text-sm text-left transition-colors'
                     )}
                   >
@@ -91,16 +97,19 @@ export function FilterPanel({
                     <button
                       onClick={() => onCategoryChange(category.id)}
                       className={cn(
-                        active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                        'block w-full px-4 py-2 text-sm text-left'
+                        active
+                          ? 'bg-[color-mix(in srgb, rgba(255,255,255,0.07) 60%, transparent)] text-[var(--foreground)]'
+                          : 'text-[color-mix(in srgb, var(--muted-foreground) 85%, transparent 15%)]',
+                        'block w-full px-4 py-2 text-sm text-left transition-colors'
                       )}
                     >
                       <div className="flex items-center gap-2">
                         <div
-                          className="w-3 h-3 rounded-full"
+                          className="h-2.5 w-2.5 rounded-full"
                           style={{ backgroundColor: category.color }}
                         />
                         {category.name}
+                        {selectedCategory === category.id && <span className="ml-auto text-xs">✓</span>}
                       </div>
                     </button>
                   )}
@@ -114,7 +123,11 @@ export function FilterPanel({
       {/* Sort Options */}
       <Menu as="div" className="relative inline-block text-left">
         <div>
-          <Menu.Button as={Button} variant="outline" className="inline-flex w-full justify-center gap-x-1.5">
+          <Menu.Button
+            as={Button}
+            variant="outline"
+      className="inline-flex w-full justify-center gap-x-1.5 rounded-2xl bg-[color-mix(in srgb, var(--card) 88%, transparent 12%)] px-5 py-2 text-sm"
+          >
             {currentSortLabel} ({sortOrder === 'asc' ? '↑' : '↓'})
             <ChevronDownIcon className="-mr-1 h-5 w-5 text-gray-400" aria-hidden="true" />
           </Menu.Button>
@@ -129,7 +142,7 @@ export function FilterPanel({
           leaveFrom="transform opacity-100 scale-100 translate-y-0"
           leaveTo="transform opacity-0 scale-95 translate-y-1"
         >
-          <Menu.Items className="absolute left-0 z-10 mt-2 w-48 origin-top-left rounded-md bg-[var(--card)] shadow-lg ring-1 ring-[var(--card-border)] focus:outline-none border border-[var(--card-border)]">
+          <Menu.Items className="absolute left-0 z-50 mt-2 w-48 origin-top-left overflow-hidden rounded-3xl border border-[color-mix(in srgb, var(--primary) 18%, var(--card-border))] bg-[color-mix(in srgb, var(--card) 92%, transparent 8%)] shadow-[var(--shadow-card)]/45 backdrop-blur">
             <div className="py-1">
               {sortOptions.map((option) => (
                 <Fragment key={option.key}>
@@ -138,7 +151,9 @@ export function FilterPanel({
                       <button
                         onClick={() => onSortChange(option.key, 'desc')}
                         className={cn(
-                          active ? 'bg-[var(--accent)] text-[var(--accent-foreground)]' : 'text-[var(--foreground)]',
+                          active
+                            ? 'bg-[color-mix(in srgb, var(--primary) 20%, transparent)] text-[var(--primary-foreground)]'
+                            : 'text-[var(--foreground)]',
                           'block w-full px-4 py-2 text-sm text-left transition-colors'
                         )}
                       >
@@ -151,7 +166,9 @@ export function FilterPanel({
                       <button
                         onClick={() => onSortChange(option.key, 'asc')}
                         className={cn(
-                          active ? 'bg-[var(--accent)] text-[var(--accent-foreground)]' : 'text-[var(--foreground)]',
+                          active
+                            ? 'bg-[color-mix(in srgb, var(--primary) 20%, transparent)] text-[var(--primary-foreground)]'
+                            : 'text-[var(--foreground)]',
                           'block w-full px-4 py-2 text-sm text-left transition-colors'
                         )}
                       >
@@ -170,7 +187,11 @@ export function FilterPanel({
       {onVisibilityChange && (
         <Menu as="div" className="relative inline-block text-left">
           <div>
-            <Menu.Button as={Button} variant="outline" className="inline-flex w-full justify-center gap-x-1.5">
+            <Menu.Button
+              as={Button}
+              variant="outline"
+              className="inline-flex w-full justify-center gap-x-1.5 rounded-2xl bg-[color-mix(in srgb, var(--card) 88%, transparent 12%)] px-5 py-2 text-sm"
+            >
               <Eye className="h-4 w-4" />
               {currentVisibilityIcon} {currentVisibilityLabel}
               <ChevronDownIcon className="-mr-1 h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -186,7 +207,7 @@ export function FilterPanel({
             leaveFrom="transform opacity-100 scale-100 translate-y-0"
             leaveTo="transform opacity-0 scale-95 translate-y-1"
           >
-            <Menu.Items className="absolute left-0 z-10 mt-2 w-48 origin-top-left rounded-md bg-[var(--card)] shadow-lg ring-1 ring-[var(--card-border)] focus:outline-none border border-[var(--card-border)]">
+            <Menu.Items className="absolute left-0 z-50 mt-2 w-48 origin-top-left overflow-hidden rounded-3xl border border-[color-mix(in srgb, var(--primary) 18%, var(--card-border))] bg-[color-mix(in srgb, var(--card) 92%, transparent 8%)] shadow-[var(--shadow-card)]/45 backdrop-blur">
               <div className="py-1">
                 {visibilityOptions.map((option) => (
                   <Menu.Item key={option.key}>
@@ -194,7 +215,9 @@ export function FilterPanel({
                       <button
                         onClick={() => onVisibilityChange(option.key)}
                         className={cn(
-                          active ? 'bg-[var(--accent)] text-[var(--accent-foreground)]' : 'text-[var(--foreground)]',
+                          active
+                            ? 'bg-[color-mix(in srgb, var(--primary) 20%, transparent)] text-[var(--primary-foreground)]'
+                            : 'text-[var(--foreground)]',
                           'block w-full px-4 py-2 text-sm text-left transition-colors'
                         )}
                       >

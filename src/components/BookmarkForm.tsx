@@ -74,20 +74,21 @@ export function BookmarkForm({ bookmark, categories, onSubmit, onCancel, isLoadi
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur"
     >
       <motion.div
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="bg-[var(--card)] rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-[var(--border)]"
+        className="relative w-full max-w-2xl max-h-[88vh] overflow-y-auto rounded-3xl border border-[color-mix(in srgb, var(--primary) 18%, var(--card-border))] bg-[color-mix(in srgb, var(--card) 92%, transparent 8%)] p-7 shadow-[var(--shadow-card)]/45 backdrop-blur"
       >
+        <div className="pointer-events-none absolute inset-0 rounded-[inherit] border border-transparent transition-all duration-300" />
         <div className="flex justify-between items-center mb-6">
           <motion.h2
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="text-xl font-semibold text-[var(--foreground)]"
+            className="text-2xl font-semibold text-[var(--foreground)]"
           >
             {bookmark ? 'Edit Bookmark' : 'Add Bookmark'}
           </motion.h2>
@@ -102,9 +103,9 @@ export function BookmarkForm({ bookmark, categories, onSubmit, onCancel, isLoadi
           </motion.div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="title" className="block text-sm font-medium text-[var(--foreground)] mb-1">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-2">
+            <label htmlFor="title" className="block text-sm font-semibold text-[var(--foreground)]">
               Title *
             </label>
             <motion.div
@@ -122,15 +123,15 @@ export function BookmarkForm({ bookmark, categories, onSubmit, onCancel, isLoadi
               <motion.p
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-[var(--destructive)] text-xs mt-1"
+                className="mt-1 text-xs text-[var(--destructive)]"
               >
                 {errors.title}
               </motion.p>
             )}
           </div>
 
-          <div>
-            <label htmlFor="url" className="block text-sm font-medium text-[var(--foreground)] mb-1">
+          <div className="space-y-2">
+            <label htmlFor="url" className="block text-sm font-semibold text-[var(--foreground)]">
               URL *
             </label>
             <motion.div
@@ -149,7 +150,7 @@ export function BookmarkForm({ bookmark, categories, onSubmit, onCancel, isLoadi
               <motion.p
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-[var(--destructive)] text-xs mt-1"
+                className="mt-1 text-xs text-[var(--destructive)]"
               >
                 {errors.url}
               </motion.p>
@@ -157,7 +158,7 @@ export function BookmarkForm({ bookmark, categories, onSubmit, onCancel, isLoadi
           </div>
 
                     <div>
-            <label htmlFor="description" className="block text-sm font-medium text-[var(--foreground)] mb-1">
+            <label htmlFor="description" className="block text-sm font-semibold text-[var(--foreground)] mb-1">
               Description
             </label>
             <Textarea
@@ -168,15 +169,15 @@ export function BookmarkForm({ bookmark, categories, onSubmit, onCancel, isLoadi
             />
           </div>
 
-          <div>
-            <label htmlFor="category" className="block text-sm font-medium text-[var(--foreground)] mb-1">
+          <div className="space-y-2">
+            <label htmlFor="category" className="block text-sm font-semibold text-[var(--foreground)]">
               Category
             </label>
             <select
               id="category"
               value={formData.category_id || ''}
               onChange={(e) => setFormData({ ...formData, category_id: e.target.value ? parseInt(e.target.value) : undefined })}
-              className="flex h-10 w-full rounded-md border border-[var(--border)] bg-[var(--input)] px-3 py-2 text-sm text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-11 w-full rounded-xl border border-[color-mix(in srgb, var(--primary) 16%, var(--border))] bg-[color-mix(in srgb, var(--input) 95%, transparent 5%)] px-4 py-2 text-sm text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--ring)]/30 focus-visible:border-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="">No Category</option>
               {categories.map((category) => (
@@ -187,12 +188,14 @@ export function BookmarkForm({ bookmark, categories, onSubmit, onCancel, isLoadi
             </select>
           </div>
 
-          <div className="border-t border-[var(--border)] pt-4">
-            <h3 className="text-sm font-medium text-[var(--foreground)] mb-3">Login Credentials (Optional)</h3>
+          <div className="rounded-2xl border border-[color-mix(in srgb, var(--primary) 12%, var(--card-border))] bg-[color-mix(in srgb, var(--secondary) 65%, transparent 35%)] p-4">
+            <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3 uppercase tracking-[0.25em] text-[var(--muted-foreground)]">
+              Login Credentials (Optional)
+            </h3>
 
             <div className="space-y-3">
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-[var(--foreground)] mb-1">
+                <label htmlFor="username" className="block text-sm font-semibold text-[var(--foreground)] mb-1">
                   Username
                 </label>
                 <Input
@@ -203,7 +206,7 @@ export function BookmarkForm({ bookmark, categories, onSubmit, onCancel, isLoadi
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-[var(--foreground)] mb-1">
+                <label htmlFor="password" className="block text-sm font-semibold text-[var(--foreground)] mb-1">
                   Password
                 </label>
                 <div className="relative">
@@ -217,7 +220,7 @@ export function BookmarkForm({ bookmark, categories, onSubmit, onCancel, isLoadi
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-[color-mix(in srgb, var(--muted-foreground) 80%, transparent 20%)] transition-colors hover:text-[var(--foreground)]"
                     title={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -227,24 +230,24 @@ export function BookmarkForm({ bookmark, categories, onSubmit, onCancel, isLoadi
             </div>
           </div>
 
-          <div className="flex items-center">
+          <div className="flex items-center gap-2 rounded-xl border border-[color-mix(in srgb, var(--primary) 12%, var(--border))] bg-[color-mix(in srgb, var(--secondary) 70%, transparent 30%)] px-3 py-2">
             <input
               id="is_private"
               type="checkbox"
               checked={formData.is_private}
               onChange={(e) => setFormData({ ...formData, is_private: e.target.checked })}
-              className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--ring)] border-[var(--border)] rounded"
+              className="h-4 w-4 rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--ring)]"
             />
-            <label htmlFor="is_private" className="ml-2 block text-sm text-[var(--foreground)]">
+            <label htmlFor="is_private" className="block text-sm font-medium text-[var(--foreground)]">
               Keep this bookmark private
             </label>
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row">
             <motion.div
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="flex-1"
+              className="sm:flex-1"
             >
               <Button type="submit" disabled={isLoading} className="w-full">
                 {isLoading ? (
@@ -265,7 +268,7 @@ export function BookmarkForm({ bookmark, categories, onSubmit, onCancel, isLoadi
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <Button type="button" variant="outline" onClick={onCancel}>
+              <Button type="button" variant="outline" onClick={onCancel} className="w-full">
                 Cancel
               </Button>
             </motion.div>

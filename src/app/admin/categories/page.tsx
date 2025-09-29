@@ -125,14 +125,16 @@ export default function CategoriesPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-[var(--background)]">
+      <div className="relative min-h-screen overflow-hidden bg-[var(--background)]">
+      <div className="pointer-events-none absolute inset-0 opacity-70" style={{ background: 'radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--primary) 14%, transparent) 0%, transparent 55%), radial-gradient(circle at 85% 12%, color-mix(in srgb, var(--accent) 18%, transparent) 0%, transparent 60%)' }} />
       {/* Header */}
       <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="bg-[var(--card)] shadow-sm border-b border-[var(--border)] sticky top-0 z-40"
+        className="group sticky top-0 z-40 overflow-hidden border-b border-[color-mix(in srgb, var(--primary) 12%, var(--card-border))] bg-[color-mix(in srgb, var(--card) 92%, transparent 8%)] backdrop-blur"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="pointer-events-none absolute inset-0 opacity-75" style={{ background: 'radial-gradient(circle at 10% -15%, color-mix(in srgb, var(--primary) 20%, transparent) 0%, transparent 60%)' }} />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -176,7 +178,7 @@ export default function CategoriesPage() {
         </div>
       </motion.header>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Category Form */}
         <AnimatePresence>
           {showForm && (
