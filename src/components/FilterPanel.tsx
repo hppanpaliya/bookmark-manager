@@ -18,7 +18,6 @@ interface FilterPanelProps {
   onCategoryChange: (categoryId?: number) => void;
   onSortChange: (sortBy: 'created_at' | 'title' | 'updated_at', sortOrder: 'asc' | 'desc') => void;
   onVisibilityChange?: (filter: VisibilityFilter) => void;
-  isAdmin?: boolean;
 }
 
 export function FilterPanel({
@@ -30,7 +29,6 @@ export function FilterPanel({
   onCategoryChange,
   onSortChange,
   onVisibilityChange,
-  isAdmin = false,
 }: FilterPanelProps) {
   const selectedCategoryName = categories.find(c => c.id === selectedCategory)?.name || 'All Categories';
 
