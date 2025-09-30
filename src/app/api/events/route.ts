@@ -1,30 +1,32 @@
 import { NextRequest } from 'next/server';
 
-// Store active connections
-const connections = new Set<WritableStreamDefaultWriter>();
+// Store active connections with proper typing
+const connections = new Set<ReadableStreamDefaultController>();
 
 // Helper to broadcast events to all connections
 export function broadcastEvent(type: string, data: unknown) {
   const message = `data: ${JSON.stringify({ type, data })}\n\n`;
 
-  connections.forEach(async (writer) => {
+  connections.forEach((controller) => {
     try {
-      await writer.write(new TextEncoder().encode(message));
+      controller.enqueue(new TextEncoder().encode(message));
     } catch {
-      // Remove dead connections
-      connections.delete(writer);
+      // Remove dead connections on error
+      connections.delete(controller);
     }
   });
 }
 
+export const config = {
+  maxDuration: 3600, // 1 hour
+};
+
 export async function GET(request: NextRequest) {
-  // Create a readable stream for SSE
+  // Create a TransformStream for proper SSE handling
   const stream = new ReadableStream({
     start(controller) {
-      const writer = controller;
-
       // Add this connection to our set
-      connections.add(writer as WritableStreamDefaultWriter);
+      connections.add(controller);
 
       // Send initial connection message
       const welcome = `data: ${JSON.stringify({
@@ -32,17 +34,32 @@ export async function GET(request: NextRequest) {
         data: { message: 'SSE connection established' }
       })}\n\n`;
 
-      writer.enqueue(new TextEncoder().encode(welcome));
+      controller.enqueue(new TextEncoder().encode(welcome));
+
+      // Send periodic ping to keep connection alive
+      const pingInterval = setInterval(() => {
+        try {
+          controller.enqueue(new TextEncoder().encode(': ping\n\n'));
+        } catch {
+          // Connection closed, clear interval
+          clearInterval(pingInterval);
+        }
+      }, 30000); // every 30 seconds
 
       // Handle client disconnect
       request.signal?.addEventListener('abort', () => {
-        connections.delete(writer as WritableStreamDefaultWriter);
+        connections.delete(controller);
+        clearInterval(pingInterval);
         try {
           controller.close();
         } catch {
           // Controller already closed
         }
       });
+    },
+    pull() {
+      // Keep the stream alive by doing nothing
+      // This prevents the stream from completing
     },
   });
 

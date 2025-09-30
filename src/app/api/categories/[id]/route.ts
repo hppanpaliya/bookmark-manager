@@ -9,6 +9,10 @@ interface ExtendedUser {
   image?: string | null;
   role?: string;
 }
+
+interface ExtendedSession {
+  user?: ExtendedUser;
+}
 import { getCategoryById, updateCategory, deleteCategory } from '@/lib/database';
 import { CategoryCreateInput } from '@/types';
 import { broadcastEvent } from '../../events/route';
@@ -52,9 +56,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as ExtendedSession | null;
 
-    if (!session || (session.user as ExtendedUser).role !== 'admin') {
+    if (!session || session.user?.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -99,9 +103,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as ExtendedSession | null;
 
-    if (!session || (session.user as ExtendedUser).role !== 'admin') {
+    if (!session || session.user?.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

@@ -9,14 +9,18 @@ interface ExtendedUser {
   image?: string | null;
   role?: string;
 }
+
+interface ExtendedSession {
+  user?: ExtendedUser;
+}
 import { getAllBookmarks, createBookmark } from '@/lib/database';
 import { BookmarkCreateInput, SearchFilters, PaginationOptions } from '@/types';
 import { broadcastEvent } from '../events/route';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    const isAdmin = (session?.user as ExtendedUser)?.role === 'admin';
+    const session = await getServerSession(authOptions) as ExtendedSession | null;
+    const isAdmin = session?.user?.role === 'admin';
 
     const { searchParams } = new URL(request.url);
 
@@ -49,9 +53,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as ExtendedSession | null;
 
-    if (!session || (session.user as ExtendedUser).role !== 'admin') {
+    if (!session || session.user?.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

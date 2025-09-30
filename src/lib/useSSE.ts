@@ -20,6 +20,10 @@ interface UseSSEOptions {
 export function useSSE(options: UseSSEOptions) {
   const eventSourceRef = useRef<EventSource | null>(null);
   const optionsRef = useRef(options);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectAttemptsRef = useRef(0);
+  const maxReconnectAttempts = 5;
+  const reconnectDelay = 1000; // Start with 1 second
 
   // Update options ref when options change
   useEffect(() => {
@@ -28,30 +32,32 @@ export function useSSE(options: UseSSEOptions) {
 
   const handleMessage = useCallback((event: MessageEvent) => {
     try {
-      const { type, data }: SSEEvent = JSON.parse(event.data);
+      const parsed = JSON.parse(event.data) as SSEEvent;
+      const { type, data } = parsed;
       const currentOptions = optionsRef.current;
 
       switch (type) {
         case 'bookmark_created':
-          currentOptions.onBookmarkCreated?.(data);
+          currentOptions.onBookmarkCreated?.(data as Bookmark);
           break;
         case 'bookmark_updated':
-          currentOptions.onBookmarkUpdated?.(data);
+          currentOptions.onBookmarkUpdated?.(data as Bookmark);
           break;
         case 'bookmark_deleted':
-          currentOptions.onBookmarkDeleted?.(data);
+          currentOptions.onBookmarkDeleted?.(data as { id: number });
           break;
         case 'category_created':
-          currentOptions.onCategoryCreated?.(data);
+          currentOptions.onCategoryCreated?.(data as Category);
           break;
         case 'category_updated':
-          currentOptions.onCategoryUpdated?.(data);
+          currentOptions.onCategoryUpdated?.(data as Category);
           break;
         case 'category_deleted':
-          currentOptions.onCategoryDeleted?.(data);
+          currentOptions.onCategoryDeleted?.(data as { id: number });
           break;
         case 'connected':
-          console.log('SSE connected:', data.message);
+          console.log('SSE connected:', (data as { message: string }).message);
+          reconnectAttemptsRef.current = 0; // Reset on successful connection
           break;
         default:
           console.log('Unknown SSE event:', type, data);
@@ -61,9 +67,15 @@ export function useSSE(options: UseSSEOptions) {
     }
   }, []);
 
-  useEffect(() => {
+  const connect = useCallback(() => {
     // Only run on client side
     if (typeof window === 'undefined') return;
+
+    // Close existing connection
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
 
     // Create EventSource connection
     eventSourceRef.current = new EventSource('/api/events');
@@ -72,11 +84,30 @@ export function useSSE(options: UseSSEOptions) {
 
     eventSourceRef.current.onerror = (error) => {
       console.error('SSE connection error:', error);
+      
+      // Attempt to reconnect if under max attempts
+      if (reconnectAttemptsRef.current < maxReconnectAttempts) {
+        reconnectAttemptsRef.current++;
+        const delay = reconnectDelay * Math.pow(2, reconnectAttemptsRef.current - 1); // Exponential backoff
+        
+        console.log(`Attempting to reconnect SSE in ${delay}ms (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`);
+        
+        reconnectTimeoutRef.current = setTimeout(() => {
+          connect();
+        }, delay);
+      } else {
+        console.error('Max SSE reconnection attempts reached');
+      }
     };
 
     eventSourceRef.current.onopen = () => {
       console.log('SSE connection opened');
+      reconnectAttemptsRef.current = 0; // Reset on successful connection
     };
+  }, [handleMessage]);
+
+  useEffect(() => {
+    connect();
 
     // Cleanup on unmount
     return () => {
@@ -84,8 +115,12 @@ export function useSSE(options: UseSSEOptions) {
         eventSourceRef.current.close();
         eventSourceRef.current = null;
       }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
     };
-  }, [handleMessage]);
+  }, [connect]);
 
   return {
     isConnected: typeof window !== 'undefined' && eventSourceRef.current?.readyState === 1,
@@ -93,6 +128,10 @@ export function useSSE(options: UseSSEOptions) {
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
         eventSourceRef.current = null;
+      }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
       }
     }
   };
