@@ -32,6 +32,7 @@ function initializeDatabase() {
   // Add emoji column if it doesn't exist (for migration)
   try {
     db.exec(`ALTER TABLE categories ADD COLUMN emoji TEXT`);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     // Column might already exist, ignore error
   }

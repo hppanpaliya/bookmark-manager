@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ExternalLink, Lock, Edit, Trash2, User, Key, Eye, EyeOff } from 'lucide-react';
 import { Bookmark } from '@/types';
 import { formatDate, getDomainFromUrl } from '@/lib/utils';
+import { useFavicon } from '@/lib/useFavicon';
 import { Button } from './ui/Button';
 
 interface BookmarkCardProps {
@@ -13,70 +14,6 @@ interface BookmarkCardProps {
   onEdit?: (bookmark: Bookmark) => void;
   onDelete?: (id: number) => void;
 }
-
-const getFaviconUrl = (url: string, size: number) => {
-  try {
-    const domain = new URL(url).hostname;
-    return `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`;
-  } catch {
-    return null;
-  }
-};
-
-const useFavicon = (url: string) => {
-  const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!url) {
-      setLoading(false);
-      return;
-    }
-
-    const sizes = [256, 128, 64, 32, 16];
-    let currentIndex = 0;
-
-    const tryNextSize = () => {
-      if (currentIndex >= sizes.length) {
-        setFaviconUrl(null);
-        setLoading(false);
-        return;
-      }
-
-      const size = sizes[currentIndex];
-      const testUrl = getFaviconUrl(url, size);
-
-      if (!testUrl) {
-        setFaviconUrl(null);
-        setLoading(false);
-        return;
-      }
-
-      const img = new Image();
-      img.onload = () => {
-        // Check if the image is actually larger than 16x16
-        if (img.naturalWidth > 16 && img.naturalHeight > 16) {
-          setFaviconUrl(testUrl);
-          setLoading(false);
-        } else {
-          // Try next smaller size
-          currentIndex++;
-          tryNextSize();
-        }
-      };
-      img.onerror = () => {
-        // Try next smaller size
-        currentIndex++;
-        tryNextSize();
-      };
-      img.src = testUrl;
-    };
-
-    tryNextSize();
-  }, [url]);
-
-  return { faviconUrl, loading };
-};
 
 export function BookmarkCard({ bookmark, isAdmin = false, onEdit, onDelete }: BookmarkCardProps) {
   const [showPassword, setShowPassword] = useState(false);
@@ -103,6 +40,7 @@ export function BookmarkCard({ bookmark, isAdmin = false, onEdit, onDelete }: Bo
 
           <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)] mb-3">
             {faviconUrl && !loading && (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={faviconUrl}
                 alt=""
